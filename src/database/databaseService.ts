@@ -1,6 +1,7 @@
 import { StorageAdapter, HybridStorageAdapter } from './storageAdapter';
 import * as Models from './models';
 import { Person, Product, Service, Invoice, InvoiceItem, StockLog, Warehouse, Category } from '../types';
+import { ProductRepository } from './ProductRepository';
 
 // Storage keys
 export const STORAGE_KEYS = {
@@ -47,9 +48,16 @@ const DEFAULT_STOCK_LOGS: StockLog[] = [];
 export class DatabaseService {
   private adapter: StorageAdapter;
   private sqlLogs: string[] = [];
+  private productsCache: Product[] = [];
 
   constructor(adapter: StorageAdapter = new HybridStorageAdapter()) {
     this.adapter = adapter;
+    // گوش به زنگ بودن برای همپا شدن اتوماتیک دیتابیس بومی
+    if (typeof window !== 'undefined') {
+      window.addEventListener('shop_db_loaded', () => {
+        this.productsCache = this.loadDataFromStorage<Product>(STORAGE_KEYS.PRODUCTS);
+      });
+    }
   }
 
   getSqlLogs(): string[] {
@@ -78,6 +86,8 @@ export class DatabaseService {
   }
 
   init() {
+    this.productsCache = this.loadDataFromStorage<Product>(STORAGE_KEYS.PRODUCTS);
+
     if (!this.adapter.getItem(STORAGE_KEYS.PERSONS)) {
       this.saveDataToStorage(STORAGE_KEYS.PERSONS, DEFAULT_PERSONS);
       this.logSql("CREATE TABLE IF NOT EXISTS persons (id TEXT PRIMARY KEY, name TEXT, phone TEXT, type TEXT, balance INTEGER);");
@@ -173,7 +183,7 @@ export class DatabaseService {
 
   // --- PRODUCTS OPERATIONS ---
   getProducts(): Product[] {
-    const list = this.loadDataFromStorage<Product>(STORAGE_KEYS.PRODUCTS);
+    const list = this.productsCache;
     let updated = false;
     const migrated = list.map(p => {
       if (!p.warehouse_stocks) {
@@ -183,28 +193,29 @@ export class DatabaseService {
       return p;
     });
     if (updated) {
-      this.saveDataToStorage(STORAGE_KEYS.PRODUCTS, migrated);
+      this.productsCache = migrated;
+      migrated.forEach(p => {
+        ProductRepository.saveProduct(p);
+      });
     }
     this.logSql("SELECT * FROM products ORDER BY title ASC;");
-    return migrated;
+    return this.productsCache;
   }
 
   saveProduct(product: Omit<Product, 'id'> & { id?: string }): Product {
-    const list = this.getProducts();
     const id = product.id || `prod_${Date.now()}`;
-    const newProduct: Product = { ...product, id };
+    const newProduct: Product = { ...product, id } as Product;
 
-    const idx = list.findIndex(p => p.id === id);
+    const idx = this.productsCache.findIndex(p => p.id === id);
     if (idx >= 0) {
-      const oldVal = list[idx];
-      list[idx] = newProduct;
+      const oldVal = this.productsCache[idx];
+      this.productsCache[idx] = newProduct;
       this.logSql(`UPDATE products SET barcode='${product.barcode}', title='${product.title}', purchase_price=${product.purchase_price}, sale_price=${product.sale_price}, stock_quantity=${product.stock_quantity}, unit='${product.unit}' WHERE id='${id}';`);
       
       if (oldVal.stock_quantity !== product.stock_quantity) {
         this.addStockLog(id, oldVal.title, oldVal.stock_quantity, product.stock_quantity, 'ویرایش مستقیم کالا و اصلاح انبار');
       }
 
-      // Log user action
       this.logUserAction(
         'PRODUCT_UPDATE',
         `ویرایش کالا: ${product.title}`,
@@ -212,11 +223,10 @@ export class DatabaseService {
         `قیمت خرید: ${product.purchase_price} | قیمت فروش: ${product.sale_price} | موجودی: ${product.stock_quantity}`
       );
     } else {
-      list.push(newProduct);
+      this.productsCache.push(newProduct);
       this.logSql(`INSERT INTO products (id, barcode, title, purchase_price, sale_price, stock_quantity, unit) VALUES ('${id}', '${product.barcode}', '${product.title}', ${product.purchase_price}, ${product.sale_price}, ${product.stock_quantity}, '${product.unit}');`);
       this.addStockLog(id, product.title, 0, product.stock_quantity, 'اضافه شدن اولیه کالا به نرم‌افزار');
 
-      // Log user action
       this.logUserAction(
         'PRODUCT_CREATE',
         `تعریف کالای جدید: ${product.title}`,
@@ -224,15 +234,14 @@ export class DatabaseService {
         `قیمت فروش: ${product.sale_price} | بارکد: ${product.barcode}`
       );
     }
-    this.saveDataToStorage(STORAGE_KEYS.PRODUCTS, list);
+    // ثبت مستقیم درون دیتابیس بومی SQLite
+    ProductRepository.saveProduct(newProduct);
     return newProduct;
   }
 
   deleteProduct(id: string): boolean {
-    const list = this.getProducts();
-    const found = list.find(p => p.id === id);
-    const filtered = list.filter(p => p.id !== id);
-    this.saveDataToStorage(STORAGE_KEYS.PRODUCTS, filtered);
+    const found = this.productsCache.find(p => p.id === id);
+    this.productsCache = this.productsCache.filter(p => p.id !== id);
     this.logSql(`DELETE FROM products WHERE id='${id}';`);
     if (found) {
       this.logUserAction(
@@ -242,19 +251,21 @@ export class DatabaseService {
         ''
       );
     }
+    // حذف مستقیم درون دیتابیس بومی SQLite
+    ProductRepository.deleteProduct(id);
     return true;
   }
 
   bulkUpdatePrices(percentage: number, roundToNearest: number = 1000): void {
-    const list = this.getProducts();
-    list.forEach(p => {
-      const OldSale = p.sale_price;
+    this.productsCache.forEach(p => {
       const computed = p.sale_price * (1 + percentage / 100);
       const rounded = Math.round(computed / roundToNearest) * roundToNearest;
       p.sale_price = rounded;
     });
-    this.saveDataToStorage(STORAGE_KEYS.PRODUCTS, list);
     this.logSql(`UPDATE products SET sale_price = ROUND((sale_price * ${1 + percentage / 100}) / ${roundToNearest}) * ${roundToNearest};`);
+    
+    // اعمال گروهی درون پایگاه داده SQLite
+    ProductRepository.bulkUpdatePrices(percentage, roundToNearest);
   }
 
   // --- SERVICES OPERATIONS ---
@@ -526,7 +537,7 @@ export class DatabaseService {
   exportDatabaseState(): string {
     const state = {
       persons: this.loadDataFromStorage(STORAGE_KEYS.PERSONS),
-      products: this.loadDataFromStorage(STORAGE_KEYS.PRODUCTS),
+      products: this.getProducts(),
       services: this.loadDataFromStorage(STORAGE_KEYS.SERVICES),
       invoices: this.loadDataFromStorage(STORAGE_KEYS.INVOICES),
       invoice_items: this.loadDataFromStorage(STORAGE_KEYS.INVOICE_ITEMS),
@@ -539,7 +550,13 @@ export class DatabaseService {
     try {
       const state = JSON.parse(jsonState);
       if (state.persons) this.saveDataToStorage(STORAGE_KEYS.PERSONS, state.persons);
-      if (state.products) this.saveDataToStorage(STORAGE_KEYS.PRODUCTS, state.products);
+      if (state.products) {
+        this.productsCache = state.products;
+        // همگام‌ساز مستقیم کل محصولات ایمپورت شده در دیتابیس بومی SQLite با دستورالعمل‌های ذخیره بومی
+        state.products.forEach((p: Product) => {
+          ProductRepository.saveProduct(p);
+        });
+      }
       if (state.services) this.saveDataToStorage(STORAGE_KEYS.SERVICES, state.services);
       if (state.invoices) this.saveDataToStorage(STORAGE_KEYS.INVOICES, state.invoices);
       if (state.invoice_items) this.saveDataToStorage(STORAGE_KEYS.INVOICE_ITEMS, state.invoice_items);

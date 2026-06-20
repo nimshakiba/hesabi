@@ -137,6 +137,16 @@ ipcMain.handle('reconnect-db', async (event, newPath) => {
   }
 });
 
+ipcMain.handle('execute-query', async (event, { sql, params }) => {
+  try {
+    const result = await dbService.executeQuery(sql, params);
+    return result;
+  } catch (err) {
+    console.error("خطا در اجرای کوئری SQL بومی دسکتاپ:", err);
+    throw err;
+  }
+});
+
 ipcMain.on('log-system-msg', (event, { message, type }) => {
   console.log(`[SYSTEM ${type?.toUpperCase() || 'INFO'}]: ${message}`);
 });

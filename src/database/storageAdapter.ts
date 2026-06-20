@@ -20,6 +20,7 @@ declare global {
       getDbPath?: () => Promise<string>;
       reconnectDb?: (newPath: string) => Promise<{ success: boolean; dbPath: string; error?: string }>;
       logSystem?: (msg: string, type: string) => void;
+      executeQuery?: (sql: string, params?: any[]) => Promise<any>;
     };
     isDbReady?: boolean;
   }

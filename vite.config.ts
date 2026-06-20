@@ -137,6 +137,39 @@ export default defineConfig(() => {
               return;
             }
 
+            // ۵. اجرای مستقیم دستورات SQL بومی برای ماژول‌ها و مخازن داده نظیر Products
+            if (url.pathname === '/api/db/query' && req.method === 'POST') {
+              let body = '';
+              req.on('data', (chunk: any) => { body += chunk; });
+              req.on('end', async () => {
+                try {
+                  const payload = JSON.parse(body || '{}');
+                  const { sql, params } = payload;
+                  if (!sql) {
+                    res.statusCode = 400;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ error: 'Missing sql parameter' }));
+                    return;
+                  }
+                  
+                  let result: any = null;
+                  if (dbService && dbService.executeQuery) {
+                    result = await dbService.executeQuery(sql, params || []);
+                  } else {
+                    throw new Error('Database service query runner is not available on top-level host of backend');
+                  }
+                  res.statusCode = 200;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ success: true, result }));
+                } catch (err: any) {
+                  res.statusCode = 500;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: err.message }));
+                }
+              });
+              return;
+            }
+
             next();
           });
         }

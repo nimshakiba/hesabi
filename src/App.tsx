@@ -60,6 +60,28 @@ export default function App() {
   const [loginUsername, setLoginUsername] = useState<string>('admin');
   const [loginPassword, setLoginPassword] = useState<string>('');
   const [loginError, setLoginError] = useState<string>('');
+
+  // Login flow modes
+  const [authView, setAuthView] = useState<'login' | 'register' | 'recover'>('login');
+  
+  // Registration Form State
+  const [regFullName, setRegFullName] = useState<string>('');
+  const [regUsername, setRegUsername] = useState<string>('');
+  const [regPassword, setRegPassword] = useState<string>('');
+  const [regRole, setRegRole] = useState<'Admin' | 'Accountant' | 'Salesperson'>('Salesperson');
+  const [regQuestion, setRegQuestion] = useState<string>('اسم معلم کلاس اول شما چیست؟');
+  const [regAnswer, setRegAnswer] = useState<string>('');
+  const [regMessage, setRegMessage] = useState<string>('');
+  const [regError, setRegError] = useState<string>('');
+
+  // Recovery Form State
+  const [recoverUsername, setRecoverUsername] = useState<string>('admin');
+  const [recoverAnswer, setRecoverAnswer] = useState<string>('');
+  const [recoverNewPassword, setRecoverNewPassword] = useState<string>('');
+  const [recoverStep, setRecoverStep] = useState<1 | 2>(1);
+  const [recoverQuestion, setRecoverQuestion] = useState<string>('');
+  const [recoverError, setRecoverError] = useState<string>('');
+  const [recoverMessage, setRecoverMessage] = useState<string>('');
   
   // Profile modification states
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
@@ -386,92 +408,452 @@ export default function App() {
       }
     };
 
+    const handleRegisterSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      setRegError('');
+      setRegMessage('');
+
+      if (!regFullName.trim() || !regUsername.trim() || !regPassword.trim() || !regAnswer.trim()) {
+        setRegError('لطفاً تمامی فیلدهای الزامی را پر نمایید.');
+        return;
+      }
+
+      const normalizedUsername = regUsername.toLowerCase().trim();
+      const userExists = systemUsers.some(u => u.username.toLowerCase() === normalizedUsername);
+      if (userExists) {
+        setRegError('این نام کاربری از پیش ثبت شده است.');
+        return;
+      }
+
+      const newUser: any = {
+        id: `user_${Date.now()}`,
+        username: normalizedUsername,
+        fullName: regFullName.trim(),
+        role: regRole,
+        password: regPassword.trim(),
+        isActive: true,
+        securityQuestion: regQuestion,
+        securityAnswer: regAnswer.toLowerCase().trim(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      OfflineDatabase.saveUser(newUser);
+      setRegMessage('ثبت‌نام با موفقیت انجام شد! اکنون می‌توانید وارد سیستم شوید.');
+      
+      setRegFullName('');
+      setRegUsername('');
+      setRegPassword('');
+      setRegAnswer('');
+
+      setLoginUsername(newUser.username);
+      
+      setTimeout(() => {
+        setAuthView('login');
+        setRegMessage('');
+      }, 2500);
+    };
+
+    const handlePrepareRecover = () => {
+      setRecoverError('');
+      setRecoverMessage('');
+      const foundUser: any = systemUsers.find(u => u.username.toLowerCase() === recoverUsername.toLowerCase().trim());
+      if (!foundUser) {
+        setRecoverError('کاربر مورد نظر پیدا نشد.');
+        return;
+      }
+      
+      const question = foundUser.securityQuestion || 'رنگ مورد علاقه شما چیست؟ (بدون سوال امنیتی ثبت شده پیشین)';
+      setRecoverQuestion(question);
+      setRecoverStep(2);
+    };
+
+    const handleRecoverSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      setRecoverError('');
+      setRecoverMessage('');
+
+      const foundUser: any = systemUsers.find(u => u.username.toLowerCase() === recoverUsername.toLowerCase().trim());
+      if (!foundUser) {
+        setRecoverError('کاربر مورد نظر یافت نشد.');
+        return;
+      }
+
+      if (!recoverNewPassword.trim()) {
+        setRecoverError('لطفاً رمز عبور جدید را وارد نمایید.');
+        return;
+      }
+
+      const expectedAnswer = foundUser.securityAnswer ? foundUser.securityAnswer.toLowerCase().trim() : '';
+      if (expectedAnswer && recoverAnswer.toLowerCase().trim() !== expectedAnswer) {
+        setRecoverError('پاسخ امنیتی وارد شده نادرست است.');
+        return;
+      }
+
+      const updatedUser = {
+        ...foundUser,
+        password: recoverNewPassword.trim(),
+        securityQuestion: foundUser.securityQuestion || 'رنگ مورد علاقه شما چیست؟',
+        securityAnswer: foundUser.securityAnswer || recoverAnswer.toLowerCase().trim(),
+        updatedAt: new Date().toISOString()
+      };
+
+      OfflineDatabase.saveUser(updatedUser);
+      
+      OfflineDatabase.logUserAction(
+        'USER_PASSWORD_RECOVERY_SUCCESS',
+        `بازیابی رمز عبور مقتدرانه به کاربر: ${foundUser.fullName} (@${foundUser.username})`
+      );
+
+      setRecoverMessage('کلمه عبور شما با موفقیت بازیابی و تغییر داده شد.');
+      setRecoverAnswer('');
+      setRecoverNewPassword('');
+      
+      setTimeout(() => {
+        setAuthView('login');
+        setRecoverStep(1);
+        setRecoverMessage('');
+      }, 2500);
+    };
+
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 selection:bg-emerald-500 selection:text-white" dir="rtl" id="login-screen-view">
-        <div className="w-full max-w-sm bg-slate-950/90 backdrop-blur-xl rounded-3xl border border-slate-800 shadow-2xl overflow-hidden p-6 md:p-8 space-y-6 text-right">
+        <div className="w-full max-w-sm bg-slate-950/90 backdrop-blur-xl rounded-3xl border border-slate-800 shadow-2xl overflow-hidden p-6 md:p-8 space-y-5 text-right">
           
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-2">
             {appSettings.storeLogo ? (
-              <img src={appSettings.storeLogo} alt="Store Logo" className="w-16 h-16 object-contain mx-auto bg-white p-1 rounded-2xl shadow-lg border border-slate-800" />
+              <img src={appSettings.storeLogo} alt="Store Logo" className="w-14 h-14 object-contain mx-auto bg-white p-1 rounded-2xl shadow-lg border border-slate-800" />
             ) : (
-              <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center text-white text-3xl font-black mx-auto shadow-lg shadow-emerald-500/20">
+              <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black mx-auto shadow-lg shadow-emerald-500/20">
                 ح
               </div>
             )}
             <div>
-              <h2 className="text-white font-black text-base">{appSettings.storeName}</h2>
-              <p className="text-[10px] text-slate-400 mt-0.5">درگاه ورود امن به پنل حسابداری و فروش</p>
+              <h2 className="text-white font-black text-sm">{appSettings.storeName}</h2>
+              <p className="text-[10px] text-slate-400 mt-0.5">سیستم حسابداری بومی لایو SQLite - پریشین</p>
             </div>
           </div>
 
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            
-            <div className="space-y-1.5 text-xs text-slate-400">
-              <label className="block font-bold">انتخاب کاربر / صندوق‌دار:</label>
-              <select
-                value={loginUsername}
-                onChange={e => {
-                  setLoginUsername(e.target.value);
-                  setLoginError('');
-                }}
-                className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-sans"
-              >
-                {systemUsers.map(u => (
-                  <option key={u.id} value={u.username}>
-                    {u.fullName} ({u.role === 'Admin' ? 'مدیر ارشد' : u.role === 'Salesperson' ? 'صندوق‌دار/فروشنده' : 'حسابدار'})
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* ۱. نمای فرم ورود */}
+          {authView === 'login' && (
+            <div className="space-y-4">
+              <div className="text-center text-xs text-slate-300 font-bold border-b border-slate-800/60 pb-2">
+                🔒 ورود به حساب کاربری
+              </div>
 
-            <div className="space-y-1.5 text-xs text-slate-400">
-              <label className="block font-bold">نام کاربری (حرفی):</label>
-              <input
-                type="text"
-                disabled
-                value={loginUsername}
-                className="w-full text-xs px-3.5 py-2.5 bg-slate-900/40 border border-slate-800/60 rounded-xl h-10 text-slate-400 text-left font-mono"
-              />
-            </div>
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                
+                <div className="space-y-1 text-xs text-slate-400">
+                  <label className="block font-bold">انتخاب کاربر سیستم:</label>
+                  <select
+                    value={loginUsername}
+                    onChange={e => {
+                      setLoginUsername(e.target.value);
+                      setLoginError('');
+                    }}
+                    className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-sans cursor-pointer"
+                  >
+                    {systemUsers.map(u => (
+                      <option key={u.id} value={u.username}>
+                        {u.fullName} ({u.role === 'Admin' ? 'مدیر سیستم' : u.role === 'Salesperson' ? 'صندوق‌دار' : 'حسابدار'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="space-y-1.5 text-xs text-slate-400">
-              <label className="block font-bold">کلمه عبور ورود:</label>
-              <div className="relative">
-                <Lock className="absolute right-3 top-2.5 w-4 h-4 text-slate-500" />
-                <input
-                  type="password"
-                  required
-                  autoFocus
-                  placeholder="••••"
-                  value={loginPassword}
-                  onChange={e => {
-                    setLoginPassword(e.target.value);
-                    setLoginError('');
-                  }}
-                  className="w-full text-xs pr-9 pl-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl h-10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-left font-mono tracking-widest text-emerald-400"
-                />
+                <div className="space-y-1 text-xs text-slate-400">
+                  <label className="block font-bold">نام کاربری (حرفی):</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={loginUsername}
+                    className="w-full text-xs px-3.5 py-2.5 bg-slate-905 border border-slate-800 rounded-xl h-10 text-slate-400 text-left font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1 text-xs text-slate-400">
+                  <label className="block font-bold">کلمه عبور ورود:</label>
+                  <div className="relative">
+                    <Lock className="absolute right-3 top-2.5 w-4 h-4 text-slate-500" />
+                    <input
+                      type="password"
+                      required
+                      autoFocus
+                      placeholder="••••"
+                      value={loginPassword}
+                      onChange={e => {
+                        setLoginPassword(e.target.value);
+                        setLoginError('');
+                      }}
+                      className="w-full text-xs pr-9 pl-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl h-10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-left font-mono tracking-widest text-emerald-400"
+                    />
+                  </div>
+                </div>
+
+                {loginError && (
+                  <div className="bg-rose-950/40 border border-rose-900/50 p-2 text-[10px] leading-relaxed font-bold text-rose-400 rounded-lg">
+                    ⚠️ {loginError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-500/10 transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Power className="w-4 h-4 shrink-0" />
+                  تایید هویت و ورود به سیستم
+                </button>
+              </form>
+
+              <div className="flex justify-between items-center text-[10.5px] text-slate-400 pt-2 border-t border-slate-900">
+                <button 
+                  onClick={() => {
+                    setAuthView('register');
+                    setRegError('');
+                    setRegMessage('');
+                  }} 
+                  className="text-emerald-500 hover:text-emerald-400 hover:underline transition cursor-pointer font-bold"
+                >
+                  📝 ثبت‌نام کاربر جدید
+                </button>
+                <button 
+                  onClick={() => {
+                    setAuthView('recover');
+                    setRecoverStep(1);
+                    setRecoverError('');
+                    setRecoverMessage('');
+                    if (systemUsers.length > 0) {
+                      setRecoverUsername(systemUsers[0].username);
+                    }
+                  }} 
+                  className="text-cyan-500 hover:text-cyan-400 hover:underline transition cursor-pointer font-bold"
+                >
+                  🔑 بازیابی رمز عبور؟
+                </button>
               </div>
             </div>
+          )}
 
-            {loginError && (
-              <div className="bg-rose-950/40 border border-rose-900/50 p-2.5 rounded-xl text-rose-400 text-[10.5px] leading-relaxed font-bold">
-                ⚠️ {loginError}
+          {/* ۲. نمای فرم ثبت‌نام کلاینت */}
+          {authView === 'register' && (
+            <div className="space-y-4">
+              <div className="text-center text-xs text-slate-300 font-bold border-b border-slate-800/60 pb-2 flex justify-between items-center">
+                <span>📝 ثبت‌نام کاربر سیستم جدید</span>
+                <button 
+                  onClick={() => setAuthView('login')} 
+                  className="text-emerald-500 text-[10px] hover:underline"
+                >
+                  بازگشت به ورود
+                </button>
               </div>
-            )}
 
-            <button
-              type="submit"
-              className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-500/10 transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <Power className="w-4 h-4 shrink-0" />
-              تایید هویت و ورود به سیستم
-            </button>
+              <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-right">
+                
+                <div className="space-y-1 text-xs text-slate-400">
+                  <label className="block font-bold">نام و نام خانوادگی:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="نمونه: رضا پرتو"
+                    value={regFullName}
+                    onChange={e => setRegFullName(e.target.value)}
+                    className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-9 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
 
-          </form>
+                <div className="space-y-1 text-xs text-slate-400">
+                  <label className="block font-bold">نام کاربری اختصاصی:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="نمونه: reza (به انگلیسی)"
+                    value={regUsername}
+                    onChange={e => setRegUsername(e.target.value)}
+                    className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-9 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-left font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1 text-xs text-slate-400">
+                  <label className="block font-bold">کلمه عبور (رمز):</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••"
+                    value={regPassword}
+                    onChange={e => setRegPassword(e.target.value)}
+                    className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-9 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-left font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1 text-xs text-slate-400">
+                  <label className="block font-bold">سمت / دسترسی:</label>
+                  <select
+                    value={regRole}
+                    onChange={e => setRegRole(e.target.value as any)}
+                    className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-9 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-sans cursor-pointer"
+                  >
+                    <option value="Salesperson">صندوق‌دار (سطح ساده)</option>
+                    <option value="Accountant">حسابدار (سطح مالی)</option>
+                    <option value="Admin">مدیر ارشد سیستم (سطح کل)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1 text-xs text-slate-400 group border-t border-slate-800/50 pt-2 text-slate-400">
+                  <div className="text-[10px] text-cyan-400 mb-1 font-bold">📌 سوال امنیتی (برای بازیابی هوشمند یا رمانی رمز):</div>
+                  <select
+                    value={regQuestion}
+                    onChange={e => setRegQuestion(e.target.value)}
+                    className="w-full text-[11px] px-2 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white mb-2 font-sans cursor-pointer"
+                  >
+                    <option value="اسم معلم کلاس اول شما چیست؟">اسم معلم کلاس اول شما چیست؟</option>
+                    <option value="نام شهر محل تولد شما چیست؟">نام شهر محل تولد شما چیست؟</option>
+                    <option value="نام اولین حیوان خانگی شما چیست؟">نام اولین حیوان خانگی شما چیست؟</option>
+                    <option value="رنگ مورد علاقه شما چیست؟">رنگ مورد علاقه شما چیست؟</option>
+                  </select>
+                  
+                  <input
+                    type="text"
+                    required
+                    placeholder="پاسخ سوال امنیتی شما"
+                    value={regAnswer}
+                    onChange={e => setRegAnswer(e.target.value)}
+                    className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-9 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+
+                {regError && (
+                  <div className="bg-rose-950/40 border border-rose-900/50 p-2 text-[10px] leading-relaxed font-bold text-rose-400 rounded-lg">
+                    ⚠️ {regError}
+                  </div>
+                )}
+
+                {regMessage && (
+                  <div className="bg-emerald-950/40 border border-emerald-900/50 p-2 text-[10px] leading-relaxed font-bold text-emerald-400 rounded-lg">
+                    ✅ {regMessage}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full py-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white rounded-xl text-xs font-black shadow-lg shadow-cyan-500/10 transition cursor-pointer"
+                >
+                  ثبت نام کاربری جدید
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* ۳. نمای فرم بازیابی رمز عبور */}
+          {authView === 'recover' && (
+            <div className="space-y-4">
+              <div className="text-center text-xs text-slate-300 font-bold border-b border-slate-800/60 pb-2 flex justify-between items-center">
+                <span>🔑 بازیابی هوشمند رمز عبور</span>
+                <button 
+                  onClick={() => setAuthView('login')} 
+                  className="text-emerald-500 text-[10px] hover:underline"
+                >
+                  بازگشت به ورود
+                </button>
+              </div>
+
+              {recoverStep === 1 ? (
+                <div className="space-y-4 text-right">
+                  <div className="space-y-1 text-xs text-slate-400">
+                    <label className="block font-bold">انتخاب کاربر مقتدر جهت بازیابی:</label>
+                    <select
+                      value={recoverUsername}
+                      onChange={e => setRecoverUsername(e.target.value)}
+                      className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 font-sans cursor-pointer"
+                    >
+                      {systemUsers.map(u => (
+                        <option key={u.id} value={u.username}>
+                          {u.fullName} (@{u.username})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {recoverError && (
+                    <div className="bg-rose-950/40 border border-rose-900/50 p-2 text-[10px] leading-relaxed font-bold text-rose-400 rounded-lg">
+                      ⚠️ {recoverError}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handlePrepareRecover}
+                    className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-black shadow-lg transition cursor-pointer"
+                  >
+                    تایید هویت و مشاهده سوال امنیتی
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleRecoverSubmit} className="space-y-4 text-right">
+                  <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                    <span className="text-[10px] text-cyan-400 block font-bold mb-1">سوال امنیتی ثبت‌شده برای شما:</span>
+                    <span className="text-xs text-white font-bold leading-relaxed">{recoverQuestion}</span>
+                  </div>
+
+                  <div className="space-y-1 text-xs text-slate-400">
+                    <label className="block font-bold">پاسخ دقیق سوال:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="پاسخ را دقیقاً همانطور که ثبت کردید بنویسید"
+                      value={recoverAnswer}
+                      onChange={e => setRecoverAnswer(e.target.value)}
+                      className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                  </div>
+
+                  <div className="space-y-1 text-xs text-slate-400 border-t border-slate-800/50 pt-3">
+                    <label className="block font-bold text-emerald-400">کلمه عبور (رمز) جدید جدید شما:</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="کلمه عبور جدید را بنویسید"
+                      value={recoverNewPassword}
+                      onChange={e => setRecoverNewPassword(e.target.value)}
+                      className="w-full text-xs px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl h-10 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-left font-mono"
+                    />
+                  </div>
+
+                  {recoverError && (
+                    <div className="bg-rose-950/40 border border-rose-900/50 p-2 text-[10px] leading-relaxed font-bold text-rose-400 rounded-lg">
+                      ⚠️ {recoverError}
+                    </div>
+                  )}
+
+                  {recoverMessage && (
+                    <div className="bg-emerald-950/40 border border-emerald-900/50 p-2 text-[10px] leading-relaxed font-bold text-emerald-400 rounded-lg">
+                      ✅ {recoverMessage}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl text-xs font-black shadow-lg transition cursor-pointer"
+                  >
+                    تغییر رمز عبور و بازنشانی حساب
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecoverStep(1);
+                      setRecoverError('');
+                    }}
+                    className="w-full py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-400 rounded-xl text-[11px] transition cursor-pointer"
+                  >
+                    تغییر نام کاربری انتخاب شده
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
 
           <div className="pt-2 border-t border-slate-800/60 text-center text-[9px] text-slate-500 flex justify-between items-center font-sans pr-1">
             <span>سیستم حسابداری فروشگاهی آریا</span>
-            <span className="font-mono text-emerald-500">آفلاین (Local)</span>
+            <span className="font-mono text-emerald-500">آفلاین (SQLite3)</span>
           </div>
 
         </div>

@@ -613,6 +613,33 @@ async function readFallback(key) {
   });
 }
 
+async function executeQuery(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject(new Error("اتصال پایگاه‌داده برقرار نیست."));
+      return;
+    }
+    const isSelect = sql.trim().toLowerCase().startsWith('select') || sql.trim().toLowerCase().startsWith('pragma');
+    if (isSelect) {
+      db.all(sql, params, (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    } else {
+      db.run(sql, params, function(err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ lastID: this.lastID, changes: this.changes });
+        }
+      });
+    }
+  });
+}
+
 module.exports = {
   db,
   initDatabase,
@@ -622,5 +649,6 @@ module.exports = {
   writeFallback,
   readFallback,
   getDbPath,
-  reconnectDatabase
+  reconnectDatabase,
+  executeQuery
 };

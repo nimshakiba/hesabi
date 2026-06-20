@@ -1,6 +1,6 @@
 {
-  "name": "Shop Accounting Software",
-  "description": "An offline shop accounting and POS software for Iranian retail stores featuring Persian fonts, RTL support, standard and quick POS invoicing, and inventory/person balances tracking.",
+  "name": "Hesabi Accounting",
+  "description": "A comprehensive Persian/English accounting system featuring chart of accounts, journal entries, ledger, trial balance, and financial reports.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

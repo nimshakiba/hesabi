@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('dbAPI', {
   getPrinters: () => ipcRenderer.invoke('get-printers'),
   getDbPath: () => ipcRenderer.invoke('get-db-path'),
   reconnectDb: (newPath) => ipcRenderer.invoke('reconnect-db', newPath),
+  executeQuery: (sql, params) => ipcRenderer.invoke('execute-query', { sql, params }),
   
   // ثبت سوابق خطاها و لاگ‌های ویندوز
   logSystem: (message, type) => ipcRenderer.send('log-system-msg', { message, type }),
