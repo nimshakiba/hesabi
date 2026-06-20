@@ -1,0 +1,6 @@
+{
+  "name": "Shop Accounting Software",
+  "description": "An offline shop accounting and POS software for Iranian retail stores featuring Persian fonts, RTL support, standard and quick POS invoicing, and inventory/person balances tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>راهنمای کامل نرم‌افزار حسابداری یکپارچه آریا</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&display=swap');
+
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #06b6d4;
+            --accent-hover: #0891b2;
+            --border-color: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 40px 20px;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            font-weight: 800;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background-color: rgba(6, 182, 212, 0.1);
+            color: var(--accent-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 15px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        /* Sidebar Section styling */
+        .sidebar-section {
+            background-color: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--accent-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-section h2 {
+            font-size: 1.6rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .menu-item {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .menu-item h3 {
+            font-size: 1.1rem;
+            color: #e2e8f0;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-item p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Page Grid */
+        .page-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* Individual Page Box */
+        .page-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+
+        .page-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            background-color: var(--accent-color);
+        }
+
+        .page-box.danger::before { background-color: var(--danger); }
+        .page-box.success::before { background-color: var(--success); }
+        .page-box.warning::before { background-color: var(--warning); }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .page-badge {
+            background-color: var(--border-color);
+            color: var(--text-primary);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .page-desc {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 25px;
+        }
+
+        /* Technical details list inside pages */
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex-grow: 1;
+            height: 1px;
+            background-color: var(--border-color);
+            margin-right: 10px;
+        }
+
+        .details-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .details-list li {
+            padding: 10px 15px;
+            background-color: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-label {
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .item-desc {
+            color: var(--text-secondary);
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        /* Buttons & Actions stylings */
+        .actions-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .action-chip {
+            background-color: rgba(15, 23, 42, 0.3);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .action-icon {
+            background-color: rgba(6, 182, 212, 0.1);
+            color: var(--accent-color);
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .action-text h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .action-text p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer styling */
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 30px;
+        }
+
+        .footer-brand {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>نرم‌افزار حسابداری و دپوی یکپارچه آریا</h1>
+            <p>راهنمای جامع ساختاری، صفحات، فیلدها، دکمه‌ها و اتصالات لایه منطقی و فیزیکی دیتابیس</p>
+            <span class="info-badge">نسخه ریلیز دسکتاپ: ۳۱.۳.۰ به همراه پایگاه‌داده امن SQLite3</span>
+        </header>
+
+        <!-- بخش یک: منوهای سایدبار و ساختار کلی -->
+        <section class="sidebar-section">
+            <h2>
+                <span>📁</span>
+                سایدبار و منوهای ناوبری نرم‌افزار
+            </h2>
+            <p>منوی کناری (Sidebar) در سمت راست برنامه قرار دارد و وظیفه جابجایی بین حالت‌های مختلف را بر عهده دارد. تب‌ها بر اساس دسترسی کاربر و نیازهای حسابداری به شرح زیر تفکیک شده‌اند:</p>
+            
+            <div class="menu-grid">
+                <div class="menu-item">
+                    <h3>📊 داشبورد آماری</h3>
+                    <p>نمایش وضعیت کلی فروش، هزینه‌ها، پرجمعیت‌ترین کالاها و نمودارهای سود روزانه در یک نگاه.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>📝 صدور فاکتور جدید</h3>
+                    <p>پیکربندی هوشمند و پویای فاکتورهای فروش، خرید، و برگشتی به همراه بارکد اسکنر.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>📜 تاریخچه فاکتورها</h3>
+                    <p>آرشیو کامل تمام تراکنش‌های ثبت‌شده صنف با امکان مرجوع‌کردن، چاپ مجدد و فیلتر زمان.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>📦 مدیریت انبار و دپو</h3>
+                    <p>کنترل فیزیکی موجودی کالاها، افزودن کاردکس کالا، و تعریف انبارهای مجزا در سطح شبکه.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>📂 تاریخچه موجودی</h3>
+                    <p>گزارش کامل مغایرت‌های انبارگردانی به انضمام دلایل ثبت دستی مغایرت توسط پرسنل.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>🛍️ کالاها و خدمات</h3>
+                    <p>تعریف کالاهای انبار، بارکد دستی یا تولید اتوماتیک، تنظیم قیمت‌ها و گروه‌های کالایی.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>👥 طرفین حساب</h3>
+                    <p>دفترچه آدرس خریداران، تأمین‌کنندگان کالا با محاسبه مانده‌بدهی لحظه‌ای بر مبنای فاکتورها.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>👔 پرسنل و بازاریاب‌ها</h3>
+                    <p>ثبت دفاتر فروش بازاریابان جهت محاسبه کمیسیون‌های ماهانه صنف.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>🏗️ دسته‌بندی‌ها</h3>
+                    <p>تعریف زیرگروه‌های ساختاریافته کالاها و خدمات به همراه ارزیابی ارث‌بری.</p>
+                </div>
+                <div class="menu-item">
+                    <h3>⚙️ پنل پشتیبان‌گیری و دیسک</h3>
+                    <p>مدیریت تراکنش‌های زنده SQLite، پشتیبان‌گیری از فایل shop.db و همگام‌ساز اطلاعات دسکتاپ.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- بخش دوم: تفکیک دقیق هر صفحه با جزییات و باکس تفکیک شده -->
+        <div class="page-grid">
+
+            <!-- صفحه لایسنس -->
+            <div class="page-box danger">
+                <div class="page-header">
+                    <h2 class="page-title">🔑 ۱. پورتال اعتبارسنجی لایسنس (Licensing Portal)</h2>
+                    <span class="page-badge">اولین گام پس از بوت نرم‌افزار</span>
+                </div>
+                <p class="page-desc">صفحه فعالسازی بسته‌های آنلاین و آفلاین آریا جهت فعال شدن عملکردهای یکپارچه ثبت فاکتور و اتصال به SQLite دیسک.</p>
+
+                <div class="section-title">📥 فیلدهای ورود اطلاعات (Inputs)</div>
+                <ul class="details-list">
+                    <li>
+                        <span class="item-label">کد لایسنس خریدار (License Key)</span>
+                        <span class="item-desc">فیلد ورودی متنی برای شناسه ۳۶ کاراکتری منحصربه‌فرد خریدار</span>
+                    </li>
+                    <li>
+                        <span class="item-label">نام کاربری ارشد سیستم (Admin Username)</span>
+                        <span class="item-desc">تعریف شناسه اولین مدیر سیستم برای دسترسی‌ها</span>
+                    </li>
+                    <li>
+                        <span class="item-label">رمز عبور ارشد (Admin Password)</span>
+                        <span class="item-desc">انتخاب کلمه عبور قوی جهت قفل امنیتی دیتابیس ریشه</span>
+                    </li>
+                </ul>
+
+                <div class="section-title">⚡ اقدامات و دکمه‌های کنترلی (Buttons & Actions)</div>
+                <div class="actions-container">
+                    <div class="action-chip">
+                        <span class="action-icon">✓</span>
+                        <div class="action-text">
+                            <h4>دکمه «فعالسازی و راه‌اندازی نرم‌افزار»</h4>
+                            <p>ارزیابی تطابق فیزیکی کلید و پی‌ریزی جداول اولیه SQLite به صورت آفلاین.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">ℹ</span>
+                        <div class="action-text">
+                            <h4>درخواست راهنمای تماس تلفنی</h4>
+                            <p>راهنمایی کاربر جهت خرید و یا صدور لایسنس‌های چندکاربره تحت شبکه.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحه داشبورد آماری -->
+            <div class="page-box success">
+                <div class="page-header">
+                    <h2 class="page-title">📊 ۲. داشبورد مدیریت و آمار ارقام (Dashboard)</h2>
+                    <span class="page-badge">تب پیش‌فرض برنامه</span>
+                </div>
+                <p class="page-desc">باکس جامع آمار مالی که اطلاعات کلی گردش وجوه درون برنامه را با رنگ‌های غنی و شفاف جلوه می‌دهد.</p>
+
+                <div class="section-title">📊 باکس‌های آماری و ویجت‌های پایش اطلاعات</div>
+                <ul class="details-list">
+                    <li>
+                        <span class="item-label">⏱️ نمایشگر زمان پویای فارسی</span>
+                        <span class="item-desc">ساعت متحرک سیستم با فرمت تقویم شمسی جلالی پیوسته</span>
+                    </li>
+                    <li>
+                        <span class="item-label">💵 مجموع کل فروش فروشگاه</span>
+                        <span class="item-desc">نمایش سرجمع ارقام ناخالص فاکتورهای فروش صادر شده به تومان</span>
+                    </li>
+                    <li>
+                        <span class="item-label">📉 مجموع هزینه‌های جاری</span>
+                        <span class="item-desc">باکس قرمز رنگ نشان‌دهنده فیش‌ها، دستمزدها و دیگر هزینه‌های ثبت مکرر</span>
+                    </li>
+                    <li>
+                        <span class="item-label">🎁 موجودی کالایی انبارک‌ها</span>
+                        <span class="item-desc">محاسبه آنلاین تعداد فیزیکی تمام اجناس موجود در پالت‌ها</span>
+                    </li>
+                </ul>
+
+                <div class="section-title">⚡ دکمه‌ها و میانبرها</div>
+                <div class="actions-container">
+                    <div class="action-chip">
+                        <span class="action-icon">➕</span>
+                        <div class="action-text">
+                            <h4>دکمه «فاکتور سریع»</h4>
+                            <p>هدایت مستقیم کاربر به فرم فاکتور به جهت تسریع کار با مشتری صنف.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحه صدور فاکتور جدید -->
+            <div class="page-box">
+                <div class="page-header">
+                    <h2 class="page-title">📝 ۳. صدور فاکتور هوشمند (Create Invoice)</h2>
+                    <span class="page-badge">پر جزئیات‌ترین فرم تراکنشی</span>
+                </div>
+                <p class="page-desc">صفحه ثبت خرید، فروش و یا فاکتورهای امانی با اتصال مستقیم به انبار کالایی و کاهش هوشمند موجودی انبارها.</p>
+
+                <div class="section-title">📥 فیلدهای اطلاعاتی فرم صدور</div>
+                <ul class="details-list">
+                    <li>
+                        <span class="item-label">نوع فاکتور (دراپ‌داون)</span>
+                        <span class="item-desc">انتخاب نوع معامله: «فروش صنف»، «خرید کالا»، «امانی خروجی»، یا «برگشت از فروش»</span>
+                    </li>
+                    <li>
+                        <span class="item-label">انتخاب مشتری/طرف حساب</span>
+                        <span class="item-desc">انتخاب نام خریدار از لیست اشخاص، نمایش بدهکاری/طلبکاری قبلی او بلافاصله</span>
+                    </li>
+                    <li>
+                        <span class="item-label">اسکنر بارکد با ورودی متنی</span>
+                        <span class="item-desc">فیلد فوکوس خودکار جهت جستجو سریع با اسکن تفنگ بارکدخوان یا نام فارسی کالا</span>
+                    </li>
+                    <li>
+                        <span class="item-label">تعداد قلم درخواستی (Quantity)</span>
+                        <span class="item-desc">شمارشگر تعداد کالا با نمایش همزمان هشدار کسری موجودی انبار جاری</span>
+                    </li>
+                    <li>
+                        <span class="item-label">تخفیف کلی (Discount)</span>
+                        <span class="item-desc">اعمال مبلغ تخفیف فاکتور قبل از نهایی‌شدن تراکنش مالی</span>
+                    </li>
+                    <li>
+                        <span class="item-label">روش تسویه (Payment Method)</span>
+                        <span class="item-desc">نقدی، پوز بانکی، چک مدت‌دار، کارت به کارت یا نسیه دفتری</span>
+                    </li>
+                </ul>
+
+                <div class="section-title">⚡ اقدامات و دکمه‌های کنترلی</div>
+                <div class="actions-container">
+                    <div class="action-chip">
+                        <span class="action-icon">✔</span>
+                        <div class="action-text">
+                            <h4>دکمه «ثبت و نهایی‌سازی فاکتور»</h4>
+                            <p>ذخیره همزمان داده‌های فاکتور درون جدول `invoices` و ردیف‌های فرعی در `invoice_items` و کسر از SQLite.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">🖨️</span>
+                        <div class="action-text">
+                            <h4>دکمه «ثبت و چاپ پیش‌فاکتور»</h4>
+                            <p>ارسال پرینت فیش به مستقیم به درایور هیت‌های حرارتی ۸۰ میلی‌متری الکترون.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">❌</span>
+                        <div class="action-text">
+                            <h4>انصراف و ریست قالب فاکتور</h4>
+                            <p>خالی کردن کل فیلدهای انتخاب کالاها و برگشت به حالت صفر.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحه کالاها و خدمات -->
+            <div class="page-box warning">
+                <div class="page-header">
+                    <h2 class="page-title">🛍️ ۴. کاتالوگ جامع کالاها و خدمات (Products & Services)</h2>
+                    <span class="page-badge">مدیریت پایه انبار</span>
+                </div>
+                <p class="page-desc">مرکز تعریف شناسنامه‌ای کالا به انضمام بارکد، قیمت خرید، قیمت فروش، و انتصاب دسته‌بندی موضوعی.</p>
+
+                <div class="section-title">📥 فیلدهای افزودن کالا / خدمات جدید</div>
+                <ul class="details-list">
+                    <li>
+                        <span class="item-label">عنوان کالا یا خدمت (Title)</span>
+                        <span class="item-desc">درج نام محصول (مثال: میلگرد، بتن، قطعات، یا سرویس حمل‌ونقل)</span>
+                    </li>
+                    <li>
+                        <span class="item-label">کد بارکد منحصربه‌فرد (Barcode)</span>
+                        <span class="item-desc">امکان وارد کردن شماره بارکد کارخانه یا زدن دکمه «تولید بارکد تصادفی»</span>
+                    </li>
+                    <li>
+                        <span class="item-label">بهای خرید اولیه (Purchase Price)</span>
+                        <span class="item-desc">ثبت رقم مبنای هزینه جهت محاسبه دقیق حاشیه سود صنف در معاملات</span>
+                    </li>
+                    <li>
+                        <span class="item-label">قیمت فروش مصوب (Sale Price)</span>
+                        <span class="item-desc">قیمت پیش‌فرض عرضه مستقیم کالا به مشتری در فاکتور</span>
+                    </li>
+                    <li>
+                        <span class="item-label">واحد سنجش (Unit)</span>
+                        <span class="item-desc">انتخاب واحد اندازه‌گیری: «عدد»، «کیلوگرم»، «متر»، «پالت» یا «بسته»</span>
+                    </li>
+                    <li>
+                        <span class="item-label">دسته‌بندی (Category)</span>
+                        <span class="item-desc">انتخاب شاخه درختی متناظر کالا جهت فیلتر آسان</span>
+                    </li>
+                </ul>
+
+                <div class="section-title">⚡ ابزارهای ویژه و دکمه‌های تغییرات گروهی</div>
+                <div class="actions-container">
+                    <div class="action-chip">
+                        <span class="action-icon">⚡</span>
+                        <div class="action-text">
+                            <h4>دکمه «تولید بارکد اتوماتیک»</h4>
+                            <p>مقداردهی خودکار فیلد بارکد با استانداردهای رندوم عددی بدون تکرار.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">📈</span>
+                        <div class="action-text">
+                            <h4>ویرایش فله قیمت‌ها (Bulk Price Update)</h4>
+                            <p>افزایش یا کاهش خودکار قیمت تمام کالاهای یک دسته‌بندی با درصد مشخص و رند کردن ارقام به نزدیک‌ترین تومان.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">✏️</span>
+                        <div class="action-text">
+                            <h4>دکمه «حذف / ویرایش ردیف کالا»</h4>
+                            <p>برداشتن موقت یا اصلاح دائم موجودی‌ها با تاثیر بلادرنگ بر فیزیک تراکنش‌ها.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحه مدیریت انبار -->
+            <div class="page-box success">
+                <div class="page-header">
+                    <h2 class="page-title">📦 ۵. مدیریت انبار و پالت‌ها (Inventory & Stocks)</h2>
+                    <span class="page-badge">تب کنترل کالا</span>
+                </div>
+                <p class="page-desc">تعریف فیزیکی مکان زندگی انبارها، انبارگردانی مکرر و انتقال ترانسفر ایمن کالا بین انبارهای شعبه.</p>
+
+                <div class="section-title">📥 فیلدهای تعاریف انبار و کاردکس</div>
+                <ul class="details-list">
+                    <li>
+                        <span class="item-label">نام دپو/انبار جدید</span>
+                        <span class="item-desc">ثبت انبار فیزیکی (مثال: انبار مرکزی تهران، انبار فرعی مستقر در کارگاه)</span>
+                    </li>
+                    <li>
+                        <span class="item-label">کد منحصربه‌فرد انبار (Code)</span>
+                        <span class="item-desc">جهت تایید مسیر ارسال در فرآیندهای لجستیک</span>
+                    </li>
+                    <li>
+                        <span class="item-label">آدرس موقعیت فیزیکی انبار</span>
+                        <span class="item-desc">جزییات آدرس به همراه یادداشت‌های لازم برای رانندگان تحویل کالا</span>
+                    </li>
+                </ul>
+
+                <div class="section-title">⚡ ماشین انتقال کالا بین انبارها (Inter-warehouse Stock Movement)</div>
+                <div class="actions-container">
+                    <div class="action-chip">
+                        <span class="action-icon">⇄</span>
+                        <div class="action-text">
+                            <h4>فرم انتقال فیزیکی کالا</h4>
+                            <p>انتخاب کالا، تعیین انبار مبدا، انبار مقصد و زدن دکمه «انجام انتقال» برای کسر از مبدا و افزودن به مقصد بدون دخالت در صورت‌حساب مالی مشتری.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">⚙</span>
+                        <div class="action-text">
+                            <h4>دکمه «ویرایش دستی موجودی» (انبارگردانی)</h4>
+                            <p>ثبت تعداد واقعی موجود هر کالا بر روی قفسه با ورود کلماتی مانند «مغایرت انبارداری» در بخش دلایل به عنوان سند.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحه مدیریت اشخاص -->
+            <div class="page-box">
+                <div class="page-header">
+                    <h2 class="page-title">👥 ۶. دفترچه طرفین حساب و پرسنل (Persons & Contacts)</h2>
+                    <span class="page-badge">لایه ذینفعان مالی</span>
+                </div>
+                <p class="page-desc">صفحه پایش مانده حساب مشتریان به همراه نوع رابطه‌شان با صنف (خریدار، تامین‌کننده، بازاریاب و یا پرسنل).</p>
+
+                <div class="section-title">📥 فیلدهای فرم افزودن شخص جدید</div>
+                <ul class="details-list">
+                    <li>
+                        <span class="item-label">نام و نام خانوادگی کامل (Fullname)</span>
+                        <span class="item-desc">نام مستعار یا نام رسمی شرکت جهت چاپ بر روی سربرگ‌های فاکتورهای رسمی</span>
+                    </li>
+                    <li>
+                        <span class="item-label">شماره همراه تماس (Phone)</span>
+                        <span class="item-desc">دریافت شماره تماس جهت ارسال تایید پیامکی فاکتورها</span>
+                    </li>
+                    <li>
+                        <span class="item-label">نقش ارتباطی شخص (Type)</span>
+                        <span class="item-desc">گروه‌بندی در سه عنوان اصلی: «مشتری (طرف حساب)»، «تامین‌کننده» یا «بازاریاب»</span>
+                    </li>
+                    <li>
+                        <span class="item-label">مانده حساب اولیه شخص</span>
+                        <span class="item-desc">تعیین رقم بدهی تاریخی شخص قبل از راه‌اندازی نرم‌افزار جدید آریا</span>
+                    </li>
+                </ul>
+
+                <div class="section-title">⚡ تحلیل‌های مالی و دکمه‌های کنترل بدهی شخص</div>
+                <div class="actions-container">
+                    <div class="action-chip">
+                        <span class="action-icon">💸</span>
+                        <div class="action-text">
+                            <h4>دکمه «ثبت دریافت پرداختی»</h4>
+                            <p>ثبت مستقیم فیش واریزی جدید مشتری از جدول دریافت‌ها برای صفر کردن بدهی او.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">📜</span>
+                        <div class="action-text">
+                            <h4>نمایش ریزتراکنش‌های فاکتوری شخص</h4>
+                            <p>کلیک بر روی هر شخص جهت لود فاکتورهای گذشته، اقلام خریداری شده و تاریخچه‌های جزئی او در باکس مجزا.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- صفحه کنترل دیسک و دیتابیس لوکال -->
+            <div class="page-box warning">
+                <div class="page-header">
+                    <h2 class="page-title">⚙️ ۷. لایه ارتباطی آفلاین با دیسک و سلامت دیتابیس (Local Database Control)</h2>
+                    <span class="page-badge">تب تخصصی پشتیبان‌گیری</span>
+                </div>
+                <p class="page-desc">پنل ارتباط مستقیم دسکتاپ با الکترون به همراه پایش زنده کدهای هشدار خرابی دیسک SQLite (دستور PRAGMA integrity_check).</p>
+
+                <div class="section-title">🛠️ ابزارهای دیسک پشتیبان فیزیکی</div>
+                <ul class="details-list">
+                    <li>
+                        <span class="item-label">موتور خودبهبودی (Self-Healing) در قبال خرابی فایل</span>
+                        <span class="item-desc">مکانیزم خودکار تشخیص کدهای خطای خطیر دیسک نظیر `SQLITE_CORRUPT` و بستن امن کانکشن و ایجاد آرشیو پشتیبان با پسوند `.db.old` و بالا آوردن دیتابیس نو بدون کرش کل نرم‌افزار.</span>
+                    </li>
+                    <li>
+                        <span class="item-label">لوگ‌های کوئری صادر شده (SQL Logs)</span>
+                        <span class="item-desc">ویجت نمایش دستورات اجرایی بر روی دیتابیس ریشه برای رفع اشکال توسعه‌دهنده</span>
+                    </li>
+                </ul>
+
+                <div class="section-title">⚡ خدمات پشتیبانی و ایمنی فایل</div>
+                <div class="actions-container">
+                    <div class="action-chip">
+                        <span class="action-icon">💾</span>
+                        <div class="action-text">
+                            <h4>خروجی کل پایگاه‌داده (Export State)</h4>
+                            <p>تبدیل کل بانک اطلاعات در قالب یک فایل پشتیبان با ساختار متن متنی طولانی جهت مهاجرت به سیستم‌های دیگر.</p>
+                        </div>
+                    </div>
+                    <div class="action-chip">
+                        <span class="action-icon">📥</span>
+                        <div class="action-text">
+                            <h4>بازگردانی فایل پشتیبان (Import State)</h4>
+                            <p>پارس و بازنشانی اطلاعات از فایل‌های بکاپ بر روی دیتابیس خالی با سرعت بالا.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <p>تهیه شده جهت مراجعات فنی و تحویل پروژه‌های صنف آریا | <span class="footer-brand">نرم‌افزار حسابداری آریا (نسخه ۳۱.۳.۰)</span></p>
+        </footer>
+    </div>
+</body>
+</html>

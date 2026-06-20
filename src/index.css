@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'AnjomanMax';
+  src: url('../assets/fonts/AnjomanMax-Regular.woff2') format('woff2'),
+       url('../assets/fonts/AnjomanMax-Regular.woff') format('woff'),
+       url('../assets/fonts/AnjomanMax-Regular.ttf') format('truetype'),
+       url('../assets/fonts/AnjomanMax-Regular.eot') format('embedded-opentype'),
+       url('../assets/fonts/AnjomanMax-Regular.svg#AnjomanMax-Regular') format('svg');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AnjomanMax';
+  src: url('../assets/fonts/AnjomanMax-Medium.woff2') format('woff2'),
+       url('../assets/fonts/AnjomanMax-Medium.woff') format('woff'),
+       url('../assets/fonts/AnjomanMax-Medium.ttf') format('truetype'),
+       url('../assets/fonts/AnjomanMax-Medium.eot') format('embedded-opentype'),
+       url('../assets/fonts/AnjomanMax-Medium.svg#AnjomanMax-Medium') format('svg');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@source "../index.html";
+@source "./**/*.{js,ts,jsx,tsx}";
+
+@theme {
+  --font-sans: "AnjomanMax", "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "AnjomanMax", "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+*, body, button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, div, table, tr, th, td, option, kbd, code, pre {
+  font-family: "AnjomanMax", "Vazirmatn", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+body {
+  font-family: var(--font-sans);
+  direction: rtl;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* پنهان‌سازی عناصر خاص به هنگام دستور چاپ فاکتور */
+@media print {
+  .no-print, #sidebar-container, #primary-app-header {
+    display: none !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #printable-paper-view, #printable-paper-view * {
+    visibility: visible !important;
+  }
+  #printable-paper-view {
+    visibility: visible !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background-color: white !important;
+    color: black !important;
+  }
+  .A4-paper {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+}
